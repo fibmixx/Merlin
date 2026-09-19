@@ -1,8 +1,14 @@
 import json
+import sys
 import os
 import random
 
-file = "vocabulary.json"
+if getattr(sys, 'frozen', False):
+    BASE_DIR = os.path.dirname(sys.executable)
+else:
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+file = os.path.join(BASE_DIR, "vocabulary.json")
 
 def load_vocabulary():
     if not os.path.exists(file):
@@ -16,7 +22,7 @@ def load_vocabulary():
 
 def save_vocabulary(vocabulary):
     with open(file, "w", encoding="utf-8") as f:
-        json.dump(vocabulary, f, indent=4)
+        json.dump(vocabulary, f, indent=4, ensure_ascii=False)
 
 def add_word(word, meaning, set_name, vocabulary):
     if set_name not in vocabulary:
