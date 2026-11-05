@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Merlin · Korean Flashcards</title>
+  <meta name="description" content="Merlin: a flashcard grimoire for learning Korean vocabulary, with spaced repetition, typing quizzes and pronunciation.">
+  <meta name="theme-color" content="#2b2d6e">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/png" href="icons/icon-64.png">
+  <link rel="apple-touch-icon" href="icons/icon-180.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Gowun+Batang:wght@400;700&family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="top">
+    <div class="merlin">
+      <img src="icons/icon-192.png" alt="" class="avatar" width="64" height="64">
+      <p class="bubble" id="merlinSays" aria-live="polite">Greetings! I am Merlin.</p>
+    </div>
+    <nav class="tabs" role="tablist">
+      <button role="tab" data-view="review" class="active">Review</button>
+      <button role="tab" data-view="grimoire">Grimoire</button>
+      <button role="tab" data-view="progress">Progress</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- REVIEW -->
+    <section id="view-review" class="view active">
+      <div class="controls">
+        <label>Set <select id="reviewSet"></select></label>
+        <label>Mode
+          <select id="reviewMode">
+            <option value="due">Smart review (spaced repetition)</option>
+            <option value="all">All cards (shuffle)</option>
+            <option value="type">Type the answer</option>
+          </select>
+        </label>
+        <label>Direction
+          <select id="reviewDir">
+            <option value="fwd">Korean → Meaning</option>
+            <option value="rev">Meaning → Korean</option>
+            <option value="mix">Mixed</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="deckbar">
+        <span id="deckInfo"></span>
+        <div class="bar"><div id="deckBar"></div></div>
+      </div>
+
+      <div class="card" id="card" tabindex="0" aria-live="polite">
+        <div class="card-side" id="cardFront"></div>
+        <div class="card-roman" id="cardRoman"></div>
+        <div class="card-answer" id="cardAnswer" hidden></div>
+        <form id="typeForm" class="typeform" hidden autocomplete="off">
+          <input id="typeInput" placeholder="Type your answer…" lang="ko" autocapitalize="off" spellcheck="false">
+          <button type="submit" class="btn primary">Check</button>
+        </form>
+        <div class="card-feedback" id="cardFeedback"></div>
+        <button class="speak" id="btnSpeak" title="Pronounce (P)" aria-label="Pronounce">🔊</button>
+      </div>
+
+      <div class="actions" id="actFlip">
+        <button class="btn primary wide" id="btnFlip">Show answer <kbd>Space</kbd></button>
+      </div>
+      <div class="actions" id="actGrade" hidden>
+        <button class="btn again" id="btnAgain">Didn't know <kbd>1</kbd></button>
+        <button class="btn good" id="btnGood">Knew it <kbd>2</kbd></button>
+      </div>
+      <div class="actions" id="actNext" hidden>
+        <button class="btn primary wide" id="btnNext">Next card <kbd>Enter</kbd></button>
+      </div>
+      <div class="actions" id="actDone" hidden>
+        <button class="btn primary" id="btnRestart">Review again</button>
+        <button class="btn" id="btnPractice">Practice all cards anyway</button>
+      </div>
+
+      <div class="options">
+        <label><input type="checkbox" id="optRoman"> Show romanization</label>
+        <label><input type="checkbox" id="optSpeak"> Auto-pronounce Korean</label>
+      </div>
+    </section>
+
+    <!-- GRIMOIRE -->
+    <section id="view-grimoire" class="view">
+      <div class="grim">
+        <aside class="sets">
+          <h2>Sets</h2>
+          <ul id="setList"></ul>
+          <form id="newSetForm" class="inline">
+            <input id="newSetName" placeholder="New set name" required>
+            <button class="btn">Add</button>
+          </form>
+          <div class="io">
+            <button class="btn small" id="btnExport">Export vocabulary.json</button>
+            <label class="btn small">Import JSON<input type="file" id="importFile" accept=".json,application/json" hidden></label>
+            <button class="btn small" id="btnStarter">Add starter Korean decks</button>
+          </div>
+          <p class="hint">Export/import uses the same <code>vocabulary.json</code> format as the desktop app, so you can move decks between both.</p>
+        </aside>
+
+        <div class="words">
+          <div class="words-head">
+            <h2 id="setTitle"></h2>
+            <div class="set-actions">
+              <button class="btn small" id="btnRenameSet">Rename</button>
+              <button class="btn small danger" id="btnDeleteSet">Delete set</button>
+            </div>
+          </div>
+
+          <form id="addWordForm" class="addword" autocomplete="off">
+            <input id="newWord" placeholder="Korean word (한국어)" lang="ko" required>
+            <input id="newMeaning" placeholder="Meaning" required>
+            <button class="btn primary">Add word</button>
+          </form>
+          <p class="roman-preview" id="romanPreview"></p>
+
+          <details class="bulk">
+            <summary>Add many words at once</summary>
+            <p class="hint">One per line: <code>word - meaning</code>, <code>word = meaning</code>, or tab-separated (paste straight from a spreadsheet).</p>
+            <textarea id="bulkText" rows="6" placeholder="사과 - apple&#10;바나나 - banana"></textarea>
+            <button class="btn" id="btnBulk">Add all</button>
+          </details>
+
+          <input id="searchWords" class="search" placeholder="Search words or meanings…" type="search">
+          <table class="wordtable">
+            <thead><tr><th>Word</th><th>Meaning</th><th>Level</th><th></th></tr></thead>
+            <tbody id="wordRows"></tbody>
+          </table>
+          <p class="empty" id="wordsEmpty" hidden>This set is empty. Add your first word above.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- PROGRESS -->
+    <section id="view-progress" class="view">
+      <div class="stats" id="statsGrid"></div>
+      <h2>Mastery by set</h2>
+      <div id="setProgress"></div>
+      <h2>Trickiest words</h2>
+      <ul id="hardWords" class="hard"></ul>
+      <p class="hint">Levels: <b>New</b> → 1 → 2 → 3 → 4 → 5 (mastered). Each “Knew it” moves a word up and waits longer before showing it again (1, 3, 7, 14, 30 days). “Didn't know” sends it back to level 1.</p>
+      <button class="btn small danger" id="btnResetProgress">Reset all progress</button>
+    </section>
+  </main>
+
+  <footer>
+    Your words are saved in this browser. Export them from the Grimoire to back them up.
+    · <a href="https://github.com/fibmixx/Merlin">GitHub</a>
+  </footer>
+
+  <div class="toast" id="toast" role="status"></div>
+
+  <script src="hangul.js"></script>
+  <script src="starter.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

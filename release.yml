@@ -1,0 +1,40 @@
+# Builds the Windows desktop app (MerlinAPP.exe) and attaches it to a GitHub Release.
+# Trigger it by pushing a tag, e.g.:  git tag v1.1.0 && git push origin v1.1.0
+name: Build desktop release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install PyInstaller
+        run: pip install pyinstaller
+      - name: Build MerlinAPP.exe
+        run: pyinstaller --noconfirm --onefile --windowed --name MerlinAPP --icon MerlinAPP.ico gui.py
+      - name: Package zip
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force package | Out-Null
+          Copy-Item dist/MerlinAPP.exe, MerlinAPP.png, vocabulary.json package/
+          Compress-Archive -Path package/* -DestinationPath Merlin-windows.zip -Force
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Merlin-windows
+          path: Merlin-windows.zip
+      - name: Publish release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: Merlin-windows.zip
+          generate_release_notes: true
